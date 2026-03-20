@@ -23,6 +23,16 @@ export async function getPets(): Promise<Pet[]> {
   return res.json();
 }
 
+export async function getPetById(id: number): Promise<Pet> {
+  const res = await fetch(`${API_URL}/${id}`);
+
+  if (!res.ok) {
+    throw new Error(`GET /pets/${id} failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
 export async function createPet(data: {
   name: string;
   species: string;
