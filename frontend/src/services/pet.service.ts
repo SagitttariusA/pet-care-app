@@ -13,6 +13,16 @@ export type Pet = {
   updatedAt: string;
 };
 
+export type PetFormData = {
+  name: string;
+  species: string;
+  breed?: string;
+  birthDate?: string;
+  sex?: string;
+  color?: string;
+  notes?: string;
+}
+
 export async function getPets(): Promise<Pet[]> {
   const res = await fetch(API_URL);
 
@@ -33,10 +43,7 @@ export async function getPetById(id: number): Promise<Pet> {
   return res.json();
 }
 
-export async function createPet(data: {
-  name: string;
-  species: string;
-}): Promise<Pet> {
+export async function createPet(data: PetFormData): Promise<Pet> {
   const res = await fetch(API_URL, {
     method: "POST",
     headers: {
@@ -52,7 +59,7 @@ export async function createPet(data: {
   return res.json();
 }
 
-export async function updatePet(id: number, data: { name: string; species: string; }): Promise<Pet> {
+export async function updatePet(id: number, data: PetFormData): Promise<Pet> {
   const res = await fetch(`${API_URL}/${id}`, {
     method: "PUT",
     headers: {

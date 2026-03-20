@@ -1,10 +1,29 @@
 {
+  // Langues pour le correcteur (anglais + français)
+  "cSpell.language": "en,fr",
+
+  // Mots spécifiques à ton projet (évite les faux positifs)
   "cSpell.words": [
-    "animaux",
-    "créer",
-    "l'espèce",
-    "obligatoires",
-    "sont",
-    "supprimer"
-  ]
+    "Prisma",
+    "SQLite",
+    "frontend",
+    "backend",
+    "API",
+    "pets",
+    "pet",
+    "App",
+    "tsconfig",
+    "localhost"
+  ],
+
+  // Ignore certains dossiers inutiles
+  "cSpell.ignorePaths": [
+    "node_modules",
+    "dist",
+    "build",
+    ".git"
+  ],
+
+  // Optionnel : évite d'être trop strict
+  "cSpell.allowCompoundWords": true
 }
