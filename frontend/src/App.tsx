@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createPet, deletePet, getPets, type Pet } from "./services/pet.service";
+import { createPet, deletePet, getPets, updatePet, type Pet } from "./services/pet.service";
 
 function App() {
   const [pets, setPets] = useState<Pet[]>([]);
@@ -7,6 +7,7 @@ function App() {
   const [species, setSpecies] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [editingPetId, setEditingPetId] = useState<number | null>(null);
 
   async function loadPets() {
     try {
@@ -47,10 +48,55 @@ function App() {
     }
   }
 
+  function handleEdit(pet: Pet) {
+    setEditingPetId(pet.id);
+    setName(pet.name);
+    setSpecies(pet.species);
+    setError("");
+  }
+
+  async function handleUpdate() {
+    try {
+      if (editingPetId === null) {
+        setError("Aucun animal sélectionné pour la modification.");
+        return;
+      }
+
+      if (!name.trim() || !species.trim()) {
+        setError("Le nom et l'espèce sont obligatoires.");
+        return;
+      }
+
+      setError("");
+      await updatePet(editingPetId, {
+        name: name.trim(),
+        species: species.trim(),
+      });
+
+      setEditingPetId(null);
+      setName("");
+      setSpecies("");
+      await loadPets();
+    } catch (err) {
+      console.error(err);
+      setError("Impossible de modifier l'animal.");
+    }
+  }
+
+  function handleCancelEdit() {
+    setEditingPetId(null);
+    setName("");
+    setSpecies("");
+    setError("");
+  }
+
   async function handleDelete(id: number) {
     try {
       setError("");
       await deletePet(id);
+      if (editingPetId === id) {
+        handleCancelEdit();
+      }
       await loadPets();
     } catch (err) {
       console.error(err);
@@ -63,7 +109,7 @@ function App() {
       <h1>Pet Care App</h1>
 
       <section style={{ marginBottom: "1.5rem" }}>
-        <h2>Add a pet</h2>
+        <h2>{editingPetId ? "Edit pet" : "Add a pet"}</h2>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           <input
             type="text"
@@ -77,7 +123,13 @@ function App() {
             value={species}
             onChange={(e) => setSpecies(e.target.value)}
           />
-          <button onClick={handleCreate}>Add</button>
+          <button onClick={editingPetId ? handleUpdate : handleCreate}>
+            {editingPetId ? "Update" : "Add"}
+          </button>
+
+          {editingPetId && (
+            <button onClick={handleCancelEdit}>Cancel</button>
+          )}
         </div>
       </section>
 
@@ -95,6 +147,7 @@ function App() {
             {pets.map((pet) => (
               <li key={pet.id} style={{ marginBottom: "0.5rem" }}>
                 <strong>{pet.name}</strong> ({pet.species}){" "}
+                <button onClick={() => handleEdit(pet)}>Edit</button>{" "}
                 <button onClick={() => handleDelete(pet.id)}>Delete</button>
               </li>
             ))}
