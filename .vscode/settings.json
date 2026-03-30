@@ -4,25 +4,22 @@
 
   // Mots spécifiques à ton projet (évite les faux positifs)
   "cSpell.words": [
-    "Prisma",
-    "SQLite",
-    "frontend",
-    "backend",
     "API",
-    "pets",
-    "pet",
     "App",
-    "tsconfig",
-    "localhost"
+    "backend",
+    "frontend",
+    "localhost",
+    "pet",
+    "pets",
+    "prisma",
+    "Prisma",
+    "sqlite",
+    "SQLite",
+    "tsconfig"
   ],
 
   // Ignore certains dossiers inutiles
-  "cSpell.ignorePaths": [
-    "node_modules",
-    "dist",
-    "build",
-    ".git"
-  ],
+  "cSpell.ignorePaths": ["node_modules", "dist", "build", ".git"],
 
   // Optionnel : évite d'être trop strict
   "cSpell.allowCompoundWords": true

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,15 +6,66 @@ datasource db {
   provider = "sqlite"
 }
 
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  pets Pet[]
+
+  @@map("users")
+}
+
 model Pet {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
   species   String
   breed     String?
-  birthDate DateTime?
+  birthDate DateTime? @map("birth_date")
   sex       String?
   color     String?
   notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  ownerId   Int       @map("owner_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  owner      User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  healthLogs HealthLog[]
+  reminders  Reminder[]
+
+  @@map("pets")
+}
+
+model HealthLog {
+  id          Int      @id @default(autoincrement())
+  petId       Int      @map("pet_id")
+  category    String
+  title       String
+  valueNumber Float?   @map("value_number")
+  unit        String?
+  description String?
+  logDate     DateTime @map("log_date")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@map("health_logs")
+}
+
+model Reminder {
+  id          Int      @id @default(autoincrement())
+  petId       Int      @map("pet_id")
+  title       String
+  description String?
+  dueDate     DateTime @map("due_date")
+  status      String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@map("reminders")
 }

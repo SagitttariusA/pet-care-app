@@ -1,105 +1,152 @@
 import { Request, Response } from "express";
 import prisma from "../db/prisma.js";
 
-export async function getPets(_req: Request, res: Response) {
-  const pets = await prisma.pet.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+// GET /api/pets
+export const getPets = async (req: Request, res: Response) => {
+  try {
+    const pets = await prisma.pet.findMany({
+      include: {
+        owner: true,
+      },
+    });
 
-  res.json(pets);
-}
-
-export async function getPetById(req: Request, res: Response) {
-  const id = Number(req.params.id);
-
-  if (Number.isNaN(id)) {
-    return res.status(400).json({ message: "Invalid pet id" });
+    res.status(200).json(pets);
+  } catch (error) {
+    console.error("Erreur getPets :", error);
+    res.status(500).json({ error: "Impossible de récupérer les animaux." });
   }
+};
 
-  const pet = await prisma.pet.findUnique({
-    where: { id },
-  });
+// GET /api/pets/:id
+export const getPetById = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
 
-  if (!pet) {
-    return res.status(404).json({ message: "Pet not found" });
+    const pet = await prisma.pet.findUnique({
+      where: { id },
+      include: {
+        owner: true,
+        healthLogs: true,
+        reminders: true,
+      },
+    });
+
+    if (!pet) {
+      return res.status(404).json({ error: "Animal introuvable." });
+    }
+
+    res.status(200).json(pet);
+  } catch (error) {
+    console.error("Erreur getPetById :", error);
+    res.status(500).json({ error: "Impossible de récupérer l'animal." });
   }
+};
 
-  res.json(pet);
-}
-
-export async function createPet(req: Request, res: Response) {
-  const { name, species, breed, birthDate, sex, color, notes } = req.body;
-
-  if (!name || !species) {
-    return res.status(400).json({ message: "name and species are required" });
-  }
-
-  const pet = await prisma.pet.create({
-    data: {
+// POST /api/pets
+export const createPet = async (req: Request, res: Response) => {
+  try {
+    const {
       name,
       species,
       breed,
-      birthDate: birthDate ? new Date(birthDate) : null,
+      birthDate,
       sex,
       color,
       notes,
-    },
-  });
+      ownerId,
+    } = req.body;
 
-  res.status(201).json(pet);
-}
+    if (!name || !species || !ownerId) {
+      return res.status(400).json({
+        error: "Les champs name, species et ownerId sont obligatoires.",
+      });
+    }
 
-export async function updatePet(req: Request, res: Response) {
-  const id = Number(req.params.id);
+    const pet = await prisma.pet.create({
+      data: {
+        name,
+        species,
+        breed,
+        birthDate: birthDate ? new Date(birthDate) : null,
+        sex,
+        color,
+        notes,
+        ownerId: Number(ownerId),
+      },
+    });
 
-  if (Number.isNaN(id)) {
-    return res.status(400).json({ message: "Invalid pet id" });
+    res.status(201).json(pet);
+  } catch (error) {
+    console.error("Erreur createPet :", error);
+    res.status(500).json({ error: "Impossible de créer l'animal." });
   }
+};
 
-  const existingPet = await prisma.pet.findUnique({
-    where: { id },
-  });
+// PUT /api/pets/:id
+export const updatePet = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
 
-  if (!existingPet) {
-    return res.status(404).json({ message: "Pet not found" });
-  }
-
-  const { name, species, breed, birthDate, sex, color, notes } = req.body;
-
-  const pet = await prisma.pet.update({
-    where: { id },
-    data: {
+    const {
       name,
       species,
       breed,
-      birthDate: birthDate ? new Date(birthDate) : null,
+      birthDate,
       sex,
       color,
       notes,
-    },
-  });
+      ownerId,
+    } = req.body;
 
-  res.json(pet);
-}
+    const existingPet = await prisma.pet.findUnique({
+      where: { id },
+    });
 
-export async function deletePet(req: Request, res: Response) {
-  const id = Number(req.params.id);
+    if (!existingPet) {
+      return res.status(404).json({ error: "Animal introuvable." });
+    }
 
-  if (Number.isNaN(id)) {
-    return res.status(400).json({ message: "Invalid pet id" });
+    const updatedPet = await prisma.pet.update({
+      where: { id },
+      data: {
+        name,
+        species,
+        breed,
+        birthDate: birthDate ? new Date(birthDate) : null,
+        sex,
+        color,
+        notes,
+        ownerId: ownerId ? Number(ownerId) : existingPet.ownerId,
+      },
+    });
+
+    res.status(200).json(updatedPet);
+  } catch (error) {
+    console.error("Erreur updatePet :", error);
+    res.status(500).json({ error: "Impossible de modifier l'animal." });
   }
+};
 
-  const existingPet = await prisma.pet.findUnique({
-    where: { id },
-  });
+// DELETE /api/pets/:id
+export const deletePet = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
 
-  if (!existingPet) {
-    return res.status(404).json({ message: "Pet not found" });
+    const existingPet = await prisma.pet.findUnique({
+      where: { id },
+    });
+
+    if (!existingPet) {
+      return res.status(404).json({ error: "Animal introuvable." });
+    }
+
+    await prisma.pet.delete({
+      where: { id },
+    });
+
+    res.status(200).json({ message: "Animal supprimé avec succès." });
+  } catch (error) {
+    console.error("Erreur deletePet :", error);
+    res.status(500).json({ error: "Impossible de supprimer l'animal." });
   }
-
-  await prisma.pet.delete({
-    where: { id },
-  });
-
-  res.status(204).send();
-}
+};
